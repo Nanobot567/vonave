@@ -1,0 +1,7 @@
+- variable-bit
+- total memory maximum determined at compile time
+- general stack
+- 16 registers
+- 2 memory banks
+	- 1 general RAM
+	- 1 file i/o bank
