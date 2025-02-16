@@ -1,4 +1,6 @@
-# assemble
+#! /bin/python3
+
+# vonave assembler
 
 import helpers
 
@@ -34,6 +36,7 @@ def assemble(asm):
     bits = "16"
 
     labels = {}
+    defs = {}
 
     header = [strToHexStr("VVX")]
     byt = []
@@ -79,10 +82,17 @@ def assemble(asm):
             name = line.split(" ")[1]
             labels[name] = byteIndex - helpers.HEADER_LENGTH
 
+        elif line.startswith("def"):
+            name = line.split(" ")[1]
+            defs[name] = line.split(" ")[2]
+
         for k in helpers.INSTRUCTIONS.keys():
             if k == line.split(" ")[0]:
                 inst = helpers.INSTRUCTIONS[k]
                 cur = [inst.hexOpcode]
+
+                for k in defs.keys():
+                    line = line.replace(k, defs[k])
 
                 spl = re.split(" |,", line)
 

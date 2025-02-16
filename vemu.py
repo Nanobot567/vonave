@@ -1,3 +1,5 @@
+#! /bin/python3
+
 # vonave emulator
 
 import binascii
@@ -34,55 +36,60 @@ def emulate(data):
 
         try:
             inst = INSTRUCTIONS[INSTRUCTION_KEYS[int(byte)]]
-
-            args = []
-
-            immediates = data[ptr+1]
-            registers = data[ptr+2] 
-            # convertToChar = data[ptr+3]
-
-            ptr += INSTRUCTION_HEADER_LENGTH + 1
-
-            try:
-                if inst.arguments[0]:
-                    byts = data[ptr:ptr+int(bits / 4)]
-
-                    dat = byts
-
-                    if immediates == 0 or immediates == 2:
-                        hx = hex(ram[int.from_bytes(byts)])
-
-                        if len(hx[2:]) % 2 == 1:
-                            hx = padhexa(hx, len(hx) + 1)
-
-                        dat = binascii.unhexlify(hx[2:])
-
-                    args.append(dat)
-
-                    ptr += int(bits / 4)
-                
-                if inst.arguments[1]:
-                    byts = data[ptr:ptr+int(bits / 4)]
-
-                    dat = byts
-
-                    if immediates == 0 or immediates == 1:
-                        hx = hex(ram[int.from_bytes(byts)]).lstrip("0x")
-
-                        if len(hx) % 2 == 1:
-                            hx = padhexa("0x" + hx, len(hx) + 1)
-
-                        dat = binascii.unhexlify(hx)
-
-                    args.append(dat)
-
-                    ptr += int(bits / 4)
-
-            except IndexError:
-                pass
-
         except IndexError:
             raise VonaveEmulatorException(f"invalid instruction {byte} at {hex(ptr)}")
+
+        args = []
+
+        immediates = 0
+        registers = 0
+
+        try:
+            immediates = data[ptr+1]
+            registers = data[ptr+2] 
+        except IndexError:
+            pass
+        # convertToChar = data[ptr+3]
+
+        ptr += INSTRUCTION_HEADER_LENGTH + 1
+
+        try:
+            if inst.arguments[0]:
+                byts = data[ptr:ptr+int(bits / 4)]
+
+                dat = byts
+
+                if immediates == 0 or immediates == 2:
+                    hx = hex(ram[int.from_bytes(byts)])
+
+                    if len(hx[2:]) % 2 == 1:
+                        hx = padhexa(hx, len(hx) + 1)
+
+                    dat = binascii.unhexlify(hx[2:])
+
+                args.append(dat)
+
+                ptr += int(bits / 4)
+            
+            if inst.arguments[1]:
+                byts = data[ptr:ptr+int(bits / 4)]
+
+                dat = byts
+
+                if immediates == 0 or immediates == 1:
+                    hx = hex(ram[int.from_bytes(byts)]).lstrip("0x")
+
+                    if len(hx) % 2 == 1:
+                        hx = padhexa("0x" + hx, len(hx) + 1)
+
+                    dat = binascii.unhexlify(hx)
+
+                args.append(dat)
+
+                ptr += int(bits / 4)
+
+        except IndexError:
+            pass
 
         return inst, args, registers, ptr
 
@@ -251,6 +258,26 @@ def emulate(data):
                     case "gpxl":
                         ram[intarg0] = pixelpos[0]
                         ram[intarg1] = pixelpos[1]
+                    case "pxe":
+                        pixelpos[0] = intarg0
+                    case "pxi":
+                        pixelpos[0] += 1
+                    case "pxd":
+                        pixelpos[0] -= 1
+                    case "pxa":
+                        pixelpos[0] += intarg0
+                    case "pxs":
+                        pixelpos[0] -= intarg0
+                    case "pye":
+                        pixelpos[1] = intarg0
+                    case "pyi":
+                        pixelpos[1] += 1
+                    case "pyd":
+                        pixelpos[1] -= 1
+                    case "pya":
+                        pixelpos[1] += intarg0
+                    case "pys":
+                        pixelpos[1] -= intarg0
                     case "point":
                         win.set_at((pixelpos[0], pixelpos[1]), color)
                     case "line":
