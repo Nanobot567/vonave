@@ -4,9 +4,6 @@
 .height 64
 .bits 16
 
-;log #$A
-;halt
-
 label nl
   log #10
   ret
