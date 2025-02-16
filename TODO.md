@@ -1,3 +1,0 @@
-- variable bit width
-	- would allow for more program space!
-	- 
