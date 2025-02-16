@@ -24,8 +24,3 @@ for each instruction, there is...
 	- `01`: arg 1 is a register
 	- `02`: arg 2 is a register
 	- `03`: both args are registers
-- convert to char value?
-	- `00`: none
-	- `01`: A
-	- `02`: B
-	- `03`: both

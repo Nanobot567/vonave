@@ -1,0 +1,172 @@
+.version 0
+.graphics 2
+.width 64
+.height 64
+.bits 16
+
+;log #$A
+;halt
+
+label nl
+  log #10
+  ret
+
+; this is a basic testing program for vonave.
+
+mov #0, #65 ; mov
+mov #1, #66
+log 0
+log 1
+swp #0, #1
+log 0
+log 1
+call #nl
+
+inc #0 ; increment
+log 0
+dec #0 ; decrement
+log 0
+
+add #0, #10 ; add
+log 0
+sub #0, #10 ; subtract
+log 0
+; TODO: mul and div
+
+call #nl
+
+mov #0, #64
+
+label loop1 ; conditionals
+  inc #0
+  log 0
+  cmp 0, #90
+  jne #loop1
+
+call #nl
+
+push #65 ; stack ops
+pop #0
+log 0
+
+call #nl
+
+; drawing stuff
+
+palette #0, #0x222222ff
+
+wipe
+color #1
+point
+wait #100
+color #2
+point
+wait #100
+
+color #1
+line #64, #64
+wait #100
+color #2
+line #64, #64
+wait #100
+
+color #1
+rect #64, #64
+wait #100
+color #2
+rect #64, #64
+wait #100
+
+color #1
+frect #64, #64
+wait #100
+color #2
+frect #64, #64
+wait #100
+wipe
+
+color #1
+
+mov #0, #63
+
+label loop2
+  wait #10
+  wipe
+  inc #0
+  char 0
+  log 0
+  cmp 0, #256
+  jne #loop2
+
+mov #1, #0
+mov #2, #0
+
+label rndLoop
+  label rndLoop2 ; random number generation
+    wait #30
+    rnd #0, #5 ; generate random number from 0 to 5
+    add #0, #49 ; increment by 49 to make displayable char
+    charw 0
+    inc #2
+    cmp 2, #10
+    jne #rndLoop2
+  
+  mov #2, #0
+
+  gpxl #3, #4 ; grab pixel position
+
+  add #4, #7 ; add 7 to pixel y pos
+
+  pxl #0, 4
+
+  inc #1
+  
+  cmp 1, #7
+  jne #rndLoop
+
+wait #500
+
+wipe
+
+color #2
+pxl #0, #0
+
+charw #'T
+charw #'E
+charw #'S
+charw #'T
+charw #' 
+charw #'D
+charw #'O
+charw #'N
+charw #'E
+charw #'!
+
+pxl #0, #7
+
+charw #'P
+charw #'R
+charw #'E
+charw #'S
+charw #'S
+charw #' 
+charw #'K
+charw #'E
+charw #'Y
+charw #' 
+charw #'T
+charw #'O
+charw #' 
+charw #'E
+charw #'X
+charw #'I
+charw #'T
+
+label wait
+  kb #0
+  cmp 0, #0
+  jeq #wait
+
+log 0
+
+halt

@@ -5,6 +5,8 @@ import helpers
 import binascii
 import re
 
+import argparse
+
 def strToPaddedHex(st, pad=8):
     return helpers.padhexa(hex(int(st)), pad)
 
@@ -48,6 +50,8 @@ def assemble(asm):
         except FileNotFoundError:
             raise VonaveAssemblerException(f"include file not found: {x.group()}")
 
+    asm = re.sub(r"(?<!\\)\'.", lambda x: str(ord(x.group(0)[1])), asm)
+
     for line in asm.split("\n"):
         oldBytLen = 0
 
@@ -90,68 +94,63 @@ def assemble(asm):
                     raise VonaveAssemblerException(f"'{inst.name}' takes {len(inst.arguments)} arg(s), not {len(spl) - 1}.")
 
                 for i in range(1, len(inst.arguments)):
-                    stripped = spl[i].lstrip("#")
+                    stripped = spl[i].lstrip("#").lstrip("$")
 
                     if stripped in helpers.READ_ONLY_REGISTERS:
                         raise VonaveAssemblerException(f"\"{inst.name}\"'s argument {i} does not allow read only registers ('{stripped}' is read only)")
 
-                arg1i, arg2i = False, False
-                arg1r, arg2r = False, False
+
+                argprops = [
+                    {
+                        "immediates": False,
+                        "registers": False,
+                        # "convertToChar": False
+                    },
+                    {
+                        "immediates": False,
+                        "registers": False,
+                        # "convertToChar": False
+                    }
+                ]
 
                 try: # NOTE: maybe compress this down a lil
-                    if spl[1].startswith("#"):
-                        arg1i = True
+                    for i in range(len(inst.arguments)):
+                        if spl[i + 1].startswith("#"):
+                            argprops[i]["immediates"] = True
 
-                    stripped = spl[1].lstrip("#")
+                        stripped = spl[i + 1].lstrip("#")
 
-                    if stripped in labels.keys():
-                        spl[1] = str(labels[stripped])
-                    elif stripped.isalpha():
-                        if stripped in helpers.REGISTERS:
-                            arg1r = True
-                            spl[1] = hex(helpers.REGISTERS.index(stripped))
-                        elif len(stripped) == 1:
-                            raise VonaveAssemblerException(f"{stripped} is not a valid register")
+                        if stripped.startswith("$"):
+                            argprops[i]["convertToChar"] = True
+     
+                        stripped = stripped.lstrip("$")
 
-                    if spl[2].startswith("#"):
-                        arg2i = True
-
-                    stripped = spl[2].lstrip("#")
-
-                    if stripped.isalpha():
-                        if stripped in helpers.REGISTERS:
-                            arg2r = True
-                            spl[2] = hex(helpers.REGISTERS.index(stripped))
-                        else:
-                            raise VonaveAssemblerException(f"{stripped} is not a valid register")
+                        if stripped in labels.keys():
+                            spl[i + 1] = str(labels[stripped])
+                        elif stripped.isalpha():
+                            if stripped in helpers.REGISTERS:
+                                argprops[i]["registers"] = True
+                                spl[i + 1] = hex(helpers.REGISTERS.index(stripped))
+                            elif len(stripped) == 1:
+                                raise VonaveAssemblerException(f"{stripped} is not a valid register")
                 except IndexError:
                     pass
 
-                appn = "00"
+                for k in argprops[0].keys():
+                    appn = "00"
 
-                if arg1i and arg2i:
-                    appn = "03"
-                elif arg2i:
-                    appn = "02"
-                elif arg1i:
-                    appn = "01"
-
-                cur.append(appn)
-
-                appn = "00"
-
-                if arg1r and arg2r:
-                    appn = "03"
-                elif arg2r:
-                    appn = "02"
-                elif arg1r:
-                    appn = "01"
-
-                cur.append(appn)
+                    if argprops[0][k] and argprops[1][k]:
+                        appn = "03"
+                    elif argprops[1][k]:
+                        appn = "02"
+                    elif argprops[0][k]:
+                        appn = "01"
+                        
+                    cur.append(appn)
 
                 try:
-                    cur.append(helpers.padhexa(spl[1].strip("#"), int(int(bits, 16) / 2)))
-                    cur.append(helpers.padhexa(spl[2].strip("#"), int(int(bits, 16) / 2)))
+                    cur.append(helpers.padhexa(spl[1].strip("#").strip("$"), int(int(bits, 16) / 2)))
+                    cur.append(helpers.padhexa(spl[2].strip("#").strip("$"), int(int(bits, 16) / 2)))
                 except IndexError:
                     pass
 
@@ -172,9 +171,26 @@ def assemble(asm):
 
     return "".join(header) + "".join(byt)
 
-with open("asm.vva", "r") as i:
-    with open("asm.vvx", "wb") as f:
-        out = assemble(i.read())
-        print(out)
 
-        f.write(binascii.unhexlify(out))
+parser = argparse.ArgumentParser(prog="vasm", description="vonave assembler")
+parser.add_argument("input", help="input file path", type=str)
+parser.add_argument("-o", "--output", help="output file path")
+args = parser.parse_args()
+
+infile = args.input
+
+try:
+    with open(infile, "r") as i:
+
+        outfile = args.output
+
+        if not args.output:
+            outfile = ".".join(infile.split(".")[:-1]) + ".vvx"
+
+        with open(outfile, "wb") as f:
+            out = assemble(i.read())
+            # print(out)
+
+            f.write(binascii.unhexlify(out))
+except FileNotFoundError:
+    parser.error(f"file {infile} not found.")

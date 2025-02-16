@@ -4,6 +4,7 @@ import binascii
 from sys import stdout
 import pygame
 import random
+import argparse
 
 from helpers import HEADER_LENGTH, INSTRUCTION_HEADER_LENGTH, INSTRUCTIONS, PALETTE_FOURBIT, PALETTE_ONEBIT, PALETTE_TWOBIT, Argument, padhexa
 
@@ -29,7 +30,7 @@ def emulate(data):
         try:
             byte = data[ptr]
         except IndexError:
-            return None, None, ptr
+            return None, None, None, ptr
 
         try:
             inst = INSTRUCTIONS[INSTRUCTION_KEYS[int(byte)]]
@@ -38,6 +39,7 @@ def emulate(data):
 
             immediates = data[ptr+1]
             registers = data[ptr+2] 
+            # convertToChar = data[ptr+3]
 
             ptr += INSTRUCTION_HEADER_LENGTH + 1
 
@@ -82,7 +84,7 @@ def emulate(data):
         except IndexError:
             raise VonaveEmulatorException(f"invalid instruction {byte} at {hex(ptr)}")
 
-        return inst, args, ptr
+        return inst, args, registers, ptr
 
     asmver = data[4]
     displaywidth = int.from_bytes(data[5:6])
@@ -97,6 +99,8 @@ def emulate(data):
 
     if gfxmode > 0:
         pygame.init()
+        pygame.display.set_caption("vonave")
+        pygame.display.set_icon(pygame.surface.Surface((0, 0)))
         pygame.freetype.init()
 
         defaultfont = pygame.freetype.Font("pzim3x5.ttf", 10)
@@ -122,21 +126,22 @@ def emulate(data):
     cmp = [0, 0]
     stack = []
     callstack = []
+ 
+    keydown = 0
 
-    while running and ptr < len(data):
+    while running:
         if gfxmode > 0:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
 
-        # print(ptr)
-    
-        instruction, args, ptr = parseBlock(data, ptr)
+                elif event.type == pygame.KEYDOWN:
+                    keydown = event.key
+
+        instruction, args, rgrs, ptr = parseBlock(data, ptr)
 
         if instruction:
             iname = instruction.name
-
-            # print(iname)
 
             intarg0, intarg1 = 0, 0
 
@@ -244,7 +249,8 @@ def emulate(data):
                     case "pxl":
                         pixelpos = [intarg0, intarg1]
                     case "gpxl":
-                        pass
+                        ram[intarg0] = pixelpos[0]
+                        ram[intarg1] = pixelpos[1]
                     case "point":
                         win.set_at((pixelpos[0], pixelpos[1]), color)
                     case "line":
@@ -270,7 +276,7 @@ def emulate(data):
                     case "click":
                         pass
                     case "kb":
-                        pass
+                        ram[intarg0] = keydown
                     case "beep":
                         pass
                     case "wait":
@@ -302,8 +308,14 @@ def emulate(data):
 
     return 0
 
+parser = argparse.ArgumentParser(prog="vemu", description="vonave CPU emulator")
+parser.add_argument("vvx", help="vonave executable (.vvx)", type=str)
+args = parser.parse_args()
 
-with open("asm.vvx", "rb") as f:
-    data = f.read()
+try:
+    with open(args.vvx, "rb") as f:
+        data = f.read()
+except FileNotFoundError:
+    parser.error(f"file {args.vvx} not found.")
 
 emulate(data)
