@@ -110,6 +110,7 @@ label rndLoop
   
   mov #2, #0
 
+  pxe #0 ; reset pixel x
   pya #7 ; add 7 to pixel y pos
 
   inc #1

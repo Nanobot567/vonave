@@ -33,7 +33,7 @@ def assemble(asm):
     version = "0"
     displaywidth = "64"
     displayheight = "64"
-    bits = "16"
+    bits = "10" # 16 TODO: make this so it's actually accurate (bc for some reason 4-bit 4color.vva works..)
 
     labels = {}
     defs = {}
