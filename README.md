@@ -10,10 +10,13 @@
 ## screenshots / videos
 
 *fntest.vva: function test*
+
 <img src="assets/fntest.gif">
 
 *4color.vva: palette display program*
+
 <img src="assets/4color.png" width=256px>
 
 *paint.vva: simple painting program*
+
 <img src="assets/paint.png" width=500px>
