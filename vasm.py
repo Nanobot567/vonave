@@ -62,9 +62,7 @@ def assemble(asm):
         for i in txt:
             hexes.append(hex(ord(i))[2:])
 
-        print(hexes)
         hexes = "".join(hexes).replace("\\n", "10")
-        print(hexes)
 
         asm = asm.replace(x.group(), hexes)
 
