@@ -77,6 +77,7 @@ INSTRUCTIONS = {
     "mouse": Instruction("mouse", [Argument.WRITABLE, Argument.WRITABLE]),
     "click": Instruction("click", [Argument.WRITABLE]),
     "kb": Instruction("kb", [Argument.WRITABLE]),
+    "rkb": Instruction("rkb"),
     "beep": Instruction("beep", [Argument.ANY]),
     "wait": Instruction("wait", [Argument.ANY]),
     "rnd": Instruction("rnd", [Argument.WRITABLE, Argument.ANY]),

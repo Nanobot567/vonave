@@ -69,11 +69,12 @@
 | mouse A,B             | place mouse x and y positions into addresses A and B                                                                                                           | 2         | WA WB            | 36     |
 | click A               | get click status and place into address A                                                                                                                      | 1         | WA               | 37     |
 | kb A                  | place current keyboard keycode into address A                                                                                                                  | 1         | WA               | 38     |
-| beep A                | play square wave at frequency A / 100 kHz                                                                                                                      | 1         |                  | 39     |
-| wait A                | pause execution for A milliseconds                                                                                                                             | 1         |                  | 3A     |
-| rnd A,B               | generate random number from 0 to B and place into A                                                                                                            | 2         | WA               | 3B     |
-| log A                 | log character A to console                                                                                                                                     | 1         |                  | 3C     |
-| halt                  | halt execution                                                                                                                                                 | 0         |                  | 3D     |
+| rkb                   | reset keyboard keycode                                                                                                                                         | 1         |                  | 39     |
+| beep A                | play square wave at frequency A / 100 kHz                                                                                                                      | 1         |                  | 3A     |
+| wait A                | pause execution for A milliseconds                                                                                                                             | 1         |                  | 3B     |
+| rnd A,B               | generate random number from 0 to B and place into A                                                                                                            | 2         | WA               | 3C     |
+| log A                 | log character A to console                                                                                                                                     | 1         |                  | 3D     |
+| halt                  | halt execution                                                                                                                                                 | 0         |                  | 3E     |
 ## registers
 
 `vonave` has 16 registers, `a` (internally known as `00`) through p (internally known as `0F`.
@@ -92,8 +93,8 @@
 ## graphics modes
 - `00`: no display (text only)
 - `01`: 1-bit mode (each pixel is white or black)
-- `02`: 2-bit mode
-- `03`: 4-bit mode
+- `02`: 2-bit mode (4 color palette)
+- `03`: 4-bit mode (16 color palette)
 - `04`: 8-bit mode
 - `05`: 16-bit mode
 

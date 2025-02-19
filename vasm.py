@@ -227,26 +227,26 @@ def assemble(asm):
 
     return "".join(header) + "".join(byt)
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="vasm", description="vonave assembler")
+    parser.add_argument("input", help="input file path", type=str)
+    parser.add_argument("-o", "--output", help="output file path")
+    args = parser.parse_args()
 
-parser = argparse.ArgumentParser(prog="vasm", description="vonave assembler")
-parser.add_argument("input", help="input file path", type=str)
-parser.add_argument("-o", "--output", help="output file path")
-args = parser.parse_args()
+    infile = args.input
 
-infile = args.input
+    try:
+        with open(infile, "r") as i:
 
-try:
-    with open(infile, "r") as i:
+            outfile = args.output
 
-        outfile = args.output
+            if not args.output:
+                outfile = ".".join(infile.split(".")[:-1]) + ".vvx"
 
-        if not args.output:
-            outfile = ".".join(infile.split(".")[:-1]) + ".vvx"
+            with open(outfile, "wb") as f:
+                out = assemble(i.read())
+                # print(out)
 
-        with open(outfile, "wb") as f:
-            out = assemble(i.read())
-            # print(out)
-
-            f.write(binascii.unhexlify(out))
-except FileNotFoundError:
-    parser.error(f"file {infile} not found.")
+                f.write(binascii.unhexlify(out))
+    except FileNotFoundError:
+        parser.error(f"file {infile} not found.")

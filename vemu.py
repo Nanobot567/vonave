@@ -10,7 +10,7 @@ import argparse
 
 from helpers import HEADER_LENGTH, INSTRUCTION_HEADER_LENGTH, INSTRUCTIONS, PALETTE_FOURBIT, PALETTE_ONEBIT, PALETTE_TWOBIT, Argument, padhexa
 
-SCALE = 7
+SCALE = 12
 
 INSTRUCTION_KEYS = []
 
@@ -135,7 +135,8 @@ def emulate(data):
     stack = []
     callstack = []
  
-    keydown = 0
+    keydown = 0 # TODO: cache keydown when it is pressed, then if kb is called remove it..? something like that, rkb is dumb lol
+    mousepos = [0, 0]
 
     while running:
         if gfxmode > 0:
@@ -312,11 +313,22 @@ def emulate(data):
                         else:
                             pixelpos[0] += text_surface.get_width() + 1
                     case "mouse":
-                        pass
+                        mp = pygame.mouse.get_pos()
+                        ram[intarg0] = int(mp[0] / SCALE)
+                        ram[intarg1] = int(mp[1] / SCALE)
                     case "click":
-                        pass
+                        cl = pygame.mouse.get_pressed()
+
+                        ram[intarg0] = 0
+
+                        if cl[0]:
+                            ram[intarg0] = 1
+                        elif cl[1]:
+                            ram[intarg0] = 2
                     case "kb":
                         ram[intarg0] = keydown
+                    case "rkb":
+                        keydown = 0
                     case "beep":
                         pass
                     case "wait":
@@ -348,14 +360,15 @@ def emulate(data):
 
     return 0
 
-parser = argparse.ArgumentParser(prog="vemu", description="vonave CPU emulator")
-parser.add_argument("vvx", help="vonave executable (.vvx)", type=str)
-args = parser.parse_args()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="vemu", description="vonave CPU emulator")
+    parser.add_argument("vvx", help="vonave executable (.vvx)", type=str)
+    args = parser.parse_args()
 
-try:
-    with open(args.vvx, "rb") as f:
-        data = f.read()
-except FileNotFoundError:
-    parser.error(f"file {args.vvx} not found.")
+    try:
+        with open(args.vvx, "rb") as f:
+            data = f.read()
+    except FileNotFoundError:
+        parser.error(f"file {args.vvx} not found.")
 
-emulate(data)
+    emulate(data)

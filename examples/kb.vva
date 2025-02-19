@@ -1,0 +1,55 @@
+.version 0
+.graphics 2
+.width 128
+.height 64
+.bits 16
+
+def DISPLAY_WIDTH 128
+def DISPLAY_HEIGHT 64
+
+def TEXT_CUTOFF 56
+
+def KEYBOARD_ADDRESS 0
+def PX_ADDRESS 1
+def PY_ADDRESS 2
+
+color #1
+
+label main
+  kb #KEYBOARD_ADDRESS
+  cmp KEYBOARD_ADDRESS, #0
+  clne #printchr
+  jmp #main
+
+label printchr
+  charw KEYBOARD_ADDRESS
+  call #get_pixel_vals
+  cmp PX_ADDRESS, #DISPLAY_WIDTH
+  clme #newline
+ 
+  rkb
+  ret
+
+label newline
+  pxe #0
+  pya #8
+
+  call #get_pixel_vals
+
+  cmp PY_ADDRESS, #TEXT_CUTOFF
+  clmt #cls
+  ret
+
+label cls
+  color #0
+  wipe
+  color #1
+
+  pxe #0
+  pye #0
+
+  ret
+
+label get_pixel_vals
+  gpxl #PX_ADDRESS, #PY_ADDRESS
+  ret

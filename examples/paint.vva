@@ -1,0 +1,80 @@
+.version 0
+.graphics 2
+.width 128
+.height 64
+.bits 16
+
+def MOUSE_X_ADDR 0
+def MOUSE_Y_ADDR 1
+def MOUSE_CLICK_ADDR 2
+def KEYBOARD_ADDR 3
+def COLOR_ADDR 4
+
+def DISPLAY_WIDTH 128
+def DISPLAY_HEIGHT 64
+
+def COLOR_PIXEL_X 127
+def COLOR_PIXEL_Y 63
+
+label main
+  mouse #MOUSE_X_ADDR, #MOUSE_Y_ADDR
+  pxl MOUSE_X_ADDR, MOUSE_Y_ADDR
+  
+  click #MOUSE_CLICK_ADDR
+
+  cmp MOUSE_CLICK_ADDR, #1
+  cleq #drawpoint
+
+  kb #KEYBOARD_ADDR
+
+  cmp KEYBOARD_ADDR, #'1 ; pressed 1?
+  cleq #switch_color_1
+  cmp KEYBOARD_ADDR, #'2 ; pressed 2?
+  cleq #switch_color_2
+  cmp KEYBOARD_ADDR, #'3 ; pressed 3?
+  cleq #switch_color_3
+  cmp KEYBOARD_ADDR, #'4 ; pressed 4?
+  cleq #switch_color_4
+
+  cmp KEYBOARD_ADDR, #'c ; pressed c?
+  cleq #clear_screen
+
+  pxl #COLOR_PIXEL_X, #COLOR_PIXEL_Y
+  point
+
+  jmp #main
+
+label switch_color_1
+  color #0
+  mov #COLOR_ADDR, #0
+  rkb
+  ret
+
+label switch_color_2
+  color #1
+  mov #COLOR_ADDR, #1
+  rkb
+  ret
+
+label switch_color_3
+  color #2
+  mov #COLOR_ADDR, #2
+  rkb
+  ret
+
+label switch_color_4
+  color #3
+  mov #COLOR_ADDR, #3
+  rkb
+  ret
+
+label clear_screen
+  color #0
+  wipe
+  color COLOR_ADDR
+  rkb
+  ret
+
+label drawpoint
+  point
+  ret

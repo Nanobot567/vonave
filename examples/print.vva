@@ -2,7 +2,7 @@
 .graphics 2
 .width 64
 .height 64
-.bits 16
+.bits 8
 
 ; this is a basic program which prints text!
 
