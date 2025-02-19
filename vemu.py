@@ -32,10 +32,10 @@ def emulate(data):
         try:
             byte = data[ptr]
         except IndexError:
-            return None, None, None, ptr
+            return None, None, None, None, ptr
 
         try:
-            inst = INSTRUCTIONS[INSTRUCTION_KEYS[int(byte)]]
+            inst = INSTRUCTIONS[INSTRUCTION_KEYS[int(byte)]] # NOTE: fails if at end of program as well
         except IndexError:
             raise VonaveEmulatorException(f"invalid instruction {byte} at {hex(ptr)}")
 
@@ -43,13 +43,14 @@ def emulate(data):
 
         immediates = 0
         registers = 0
+        dataAtAddress = 0
 
         try:
             immediates = data[ptr+1]
             registers = data[ptr+2] 
+            dataAtAddress = data[ptr+3]
         except IndexError:
             pass
-        # convertToChar = data[ptr+3]
 
         ptr += INSTRUCTION_HEADER_LENGTH + 1
 
@@ -91,7 +92,7 @@ def emulate(data):
         except IndexError:
             pass
 
-        return inst, args, registers, ptr
+        return inst, args, registers, dataAtAddress, ptr
 
     asmver = data[4]
     displaywidth = int.from_bytes(data[5:6])
@@ -145,7 +146,7 @@ def emulate(data):
                 elif event.type == pygame.KEYDOWN:
                     keydown = event.key
 
-        instruction, args, rgrs, ptr = parseBlock(data, ptr)
+        instruction, args, rgrs, fromROM, ptr = parseBlock(data, ptr)
 
         if instruction:
             iname = instruction.name
@@ -153,8 +154,20 @@ def emulate(data):
             intarg0, intarg1 = 0, 0
 
             try:
-                intarg0 = int.from_bytes(args[0])
-                intarg1 = int.from_bytes(args[1])
+                arg0 = args[0]
+
+                if fromROM == 1 or fromROM == 3: # NOTE: possibly load everything into RAM, so there's no fromROM at all???
+                    arg0 = padhexa(hex(data[ram[int.from_bytes(arg0)] + HEADER_LENGTH]), int(bits / 2))
+                    arg0 = binascii.unhexlify(arg0)
+
+                intarg0 = int.from_bytes(arg0)
+
+                arg1 = args[1]
+
+                if fromROM == 2 or fromROM == 3:
+                    arg1 = ram[int.from_bytes(arg1)]
+
+                intarg1 = int.from_bytes(arg1)
             except IndexError:
                 pass
 
@@ -248,7 +261,7 @@ def emulate(data):
                     case "wipe":
                         win.fill(palette[0], (0, 0, displaywidth, displayheight))
                     case "palette":
-                        palette[intarg0] = tuple(args[1])
+                        palette[intarg0] = tuple(arg1)
                         color = palette[colorindex]
                     case "color":
                         color = palette[intarg0]
@@ -312,7 +325,7 @@ def emulate(data):
                         ram[intarg0] = random.randint(0, intarg1)
                     case "log":
                         try:
-                            stdout.write(args[0].decode())
+                            stdout.write(arg0.decode())
                             stdout.flush()
                         except UnicodeDecodeError:
                             pass

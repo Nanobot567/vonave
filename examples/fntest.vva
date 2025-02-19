@@ -4,10 +4,6 @@
 .height 64
 .bits 16
 
-label nl
-  log #10
-  ret
-
 ; this is a basic testing program for vonave.
 
 mov #0, #65 ; mov
@@ -161,6 +157,8 @@ label wait
   cmp 0, #0
   jeq #wait
 
-log 0
-
 halt
+
+label nl
+  log #10
+  ret

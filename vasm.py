@@ -37,13 +37,14 @@ def assemble(asm):
 
     labels = {}
     defs = {}
+    datas = {}
 
     header = [strToHexStr("VVX")]
     byt = []
 
     byteIndex = helpers.HEADER_LENGTH # header is always 9 bytes long
 
-    for x in re.finditer(r"\.include\s+(\S+)", asm): # include stuff
+    for x in re.finditer(r"\.include\s+(\S+)", asm): # include file with .include
         try:
             includefile = open(x.group().split(" ")[1].strip("\""))
         
@@ -53,14 +54,23 @@ def assemble(asm):
         except FileNotFoundError:
             raise VonaveAssemblerException(f"include file not found: {x.group()}")
 
+    for x in re.finditer(r"\".+\"", asm): # replace anything with quotes with hex representation
+        txt = x.group().strip("\"")
+
+        hexes = []
+
+        for i in txt:
+            hexes.append(hex(ord(i))[2:])
+
+        print(hexes)
+        hexes = "".join(hexes).replace("\\n", "10")
+        print(hexes)
+
+        asm = asm.replace(x.group(), hexes)
+
     asm = re.sub(r"(?<!\\)\'.", lambda x: str(ord(x.group(0)[1])), asm)
 
     for line in asm.split("\n"):
-        oldBytLen = 0
-
-        for b in byt:
-            oldBytLen += int((len(b) + 1) / 2)
-
         line = line.split(";")[0].lstrip()
 
         if line.startswith(".version"):
@@ -78,11 +88,42 @@ def assemble(asm):
         elif line.startswith(".bits"):
             bits = strToPaddedHex(line.split(" ")[1], 2)
 
-        elif line.startswith("label"): # TODO: support labels not seen yet
+        elif line.startswith(".data"):
+            datas[line.split(" ")[1]] = line.split(" ")[2]
+            
+        elif line.startswith("label"):
             name = line.split(" ")[1]
             labels[name] = byteIndex - helpers.HEADER_LENGTH
+        else:
+            for k in helpers.INSTRUCTIONS.keys():
+                if k == line.split(" ")[0]:
+                    inst = helpers.INSTRUCTIONS[k]
 
-        elif line.startswith("def"):
+                    byteIndex += helpers.INSTRUCTION_HEADER_LENGTH + 1 + (len(inst.arguments) * int(int(bits, 16) / 4))
+
+    totalByteLen = byteIndex
+
+    datasHex = {}
+    datasAddrs = {}
+
+    tmpLen = totalByteLen
+
+    for k, v in datas.items():
+        datasHex[k] = v
+        datasAddrs[k] = tmpLen - helpers.HEADER_LENGTH
+        tmpLen += int(len(v) / 2)
+
+    byteIndex = helpers.HEADER_LENGTH
+
+    for line in asm.split("\n"):
+        oldBytLen = 0
+
+        for b in byt:
+            oldBytLen += int((len(b) + 1) / 2)
+
+        line = line.split(";")[0].lstrip()
+
+        if line.startswith("def"):
             name = line.split(" ")[1]
             defs[name] = line.split(" ")[2]
 
@@ -114,16 +155,16 @@ def assemble(asm):
                     {
                         "immediates": False,
                         "registers": False,
-                        # "convertToChar": False
+                        "fromROM": False
                     },
                     {
                         "immediates": False,
                         "registers": False,
-                        # "convertToChar": False
+                        "fromROM": False
                     }
                 ]
 
-                try: # NOTE: maybe compress this down a lil
+                try:
                     for i in range(len(inst.arguments)):
                         if spl[i + 1].startswith("#"):
                             argprops[i]["immediates"] = True
@@ -131,12 +172,14 @@ def assemble(asm):
                         stripped = spl[i + 1].lstrip("#")
 
                         if stripped.startswith("$"):
-                            argprops[i]["convertToChar"] = True
+                            argprops[i]["fromROM"] = True
      
                         stripped = stripped.lstrip("$")
 
                         if stripped in labels.keys():
                             spl[i + 1] = str(labels[stripped])
+                        elif stripped in datas.keys():
+                            spl[i + 1] = str(datasAddrs[stripped])
                         elif stripped.isalpha():
                             if stripped in helpers.REGISTERS:
                                 argprops[i]["registers"] = True
@@ -166,6 +209,8 @@ def assemble(asm):
 
                 byt.append("".join(cur))
 
+                break
+
         newBytLen = 0
 
         for b in byt:
@@ -178,6 +223,9 @@ def assemble(asm):
     header.append(displayheight)
     header.append(graphicsMode)
     header.append(bits)
+
+    for k, v in datas.items():
+        byt.append(datasHex[k])
 
     return "".join(header) + "".join(byt)
 

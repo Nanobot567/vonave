@@ -1,0 +1,27 @@
+.version 0
+.graphics 2
+.width 64
+.height 64
+.bits 16
+
+; this is a basic program which prints text!
+
+def PRINT_PTR 0
+
+.data hellotext "Hello world!"00 ; null byte at the end
+
+mov #PRINT_PTR, #hellotext
+
+label print
+  log #$PRINT_PTR
+  charw #$PRINT_PTR
+  inc #PRINT_PTR
+  cmp #$PRINT_PTR, 0
+  jne #print
+
+label loop
+  kb #0
+  cmp 0, #0
+  jeq #loop
+
+halt
