@@ -29,8 +29,8 @@ class VonaveAssemblerException(Exception):
 
 
 def assemble(asm):
-    graphicsMode = "0"
-    version = "0"
+    graphicsMode = "00"
+    version = "00"
     displaywidth = "64"
     displayheight = "64"
     bits = "10" # 16 TODO: make this so it's actually accurate (bc for some reason 4-bit 4color.vva works..)
@@ -44,7 +44,7 @@ def assemble(asm):
 
     byteIndex = helpers.HEADER_LENGTH # header is always 9 bytes long
 
-    for x in re.finditer(r"\.include\s+(\S+)", asm): # include file with .include
+    for x in re.finditer(r"^\.include\s+(\S+)", asm, flags=re.MULTILINE): # include file with .include
         try:
             includefile = open(x.group().split(" ")[1].strip("\""))
         
@@ -65,7 +65,7 @@ def assemble(asm):
         hexes = "".join(hexes).replace("\\n", "10")
 
         asm = asm.replace(x.group(), hexes)
-
+        
     asm = re.sub(r"(?<!\\)\'.", lambda x: str(ord(x.group(0)[1])), asm)
 
     for line in asm.split("\n"):
@@ -119,6 +119,9 @@ def assemble(asm):
         for b in byt:
             oldBytLen += int((len(b) + 1) / 2)
 
+        if line.startswith(";"):
+            continue
+
         line = line.split(";")[0].lstrip()
 
         if line.startswith("def"):
@@ -151,12 +154,12 @@ def assemble(asm):
 
                 argprops = [
                     {
-                        "immediates": False,
+                        "immediates": True,
                         "registers": False,
                         "fromROM": False
                     },
                     {
-                        "immediates": False,
+                        "immediates": True,
                         "registers": False,
                         "fromROM": False
                     }
@@ -164,8 +167,8 @@ def assemble(asm):
 
                 try:
                     for i in range(len(inst.arguments)):
-                        if spl[i + 1].startswith("#"):
-                            argprops[i]["immediates"] = True
+                        if spl[i + 1].startswith("#"): # addresses are accessed through # now
+                            argprops[i]["immediates"] = False
 
                         stripped = spl[i + 1].lstrip("#")
 
@@ -245,7 +248,7 @@ if __name__ == "__main__":
 
             with open(outfile, "wb") as f:
                 out = assemble(i.read())
-                # print(out)
+                print(out)
 
                 f.write(binascii.unhexlify(out))
     except FileNotFoundError:

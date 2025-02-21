@@ -13,43 +13,54 @@ def KEYBOARD_ADDRESS 0
 def PX_ADDRESS 1
 def PY_ADDRESS 2
 
-color #1
+color 1
 
 label main
-  kb #KEYBOARD_ADDRESS
-  cmp KEYBOARD_ADDRESS, #0
-  clne #printchr
-  jmp #main
+  kb KEYBOARD_ADDRESS
+  cmp #KEYBOARD_ADDRESS, 0
+  clne printchr
+  jmp main
 
 label printchr
-  charw KEYBOARD_ADDRESS
-  call #get_pixel_vals
-  cmp PX_ADDRESS, #DISPLAY_WIDTH
-  clme #newline
+  charw #KEYBOARD_ADDRESS
+  call get_pixel_vals
+
+  cmp #KEYBOARD_ADDRESS, 8
+  cleq backspace
+
+  cmp #PX_ADDRESS, DISPLAY_WIDTH
+  clme newline
  
   rkb
   ret
 
+label backspace
+  pxs 10
+  color 0
+  frect 8, 8
+  color 1
+  ret
+
 label newline
-  pxe #0
-  pya #8
+  pxe 0
+  pya 8
 
-  call #get_pixel_vals
+  call get_pixel_vals
 
-  cmp PY_ADDRESS, #TEXT_CUTOFF
-  clmt #cls
+  cmp #PY_ADDRESS, TEXT_CUTOFF
+  clmt cls
   ret
 
 label cls
-  color #0
+  color 0
   wipe
-  color #1
+  color 1
 
-  pxe #0
-  pye #0
+  pxe 0
+  pye 0
 
   ret
 
 label get_pixel_vals
-  gpxl #PX_ADDRESS, #PY_ADDRESS
+  gpxl PX_ADDRESS, PY_ADDRESS
   ret

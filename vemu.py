@@ -136,6 +136,9 @@ def emulate(data):
     callstack = []
  
     keydown = 0 # TODO: cache keydown when it is pressed, then if kb is called remove it..? something like that, rkb is dumb lol
+    # alternatively you could add interrupts!
+    # interrupt kb
+    #   [code]
     mousepos = [0, 0]
 
     while running:
@@ -247,6 +250,8 @@ def emulate(data):
                         stack.append(intarg0)
                     case "pop":
                         ram[intarg0] = stack.pop()
+                    case "popa":
+                        stack = []
                     case "and":
                         pass
                     case "or":

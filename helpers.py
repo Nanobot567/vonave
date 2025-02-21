@@ -47,6 +47,7 @@ INSTRUCTIONS = {
     "ret": Instruction("ret"),
     "push": Instruction("push", [Argument.ANY]),
     "pop": Instruction("pop", [Argument.WRITABLE]),
+    "popa": Instruction("popa"),
     "and": Instruction("and", [Argument.WRITABLE, Argument.ANY]),
     "or": Instruction("or", [Argument.WRITABLE, Argument.ANY]),
     "xor": Instruction("xor", [Argument.WRITABLE, Argument.ANY]),

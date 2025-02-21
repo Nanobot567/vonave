@@ -11,49 +11,49 @@ def PY_ADDR 3
 def RECT_DRAW_LOOP_END 4
 def SQUARE_SIZE 8
 
-pxl #0, #0
+pxl 0, 0
 
 label rects
-  color 0
-  frect #SQUARE_SIZE, #SQUARE_SIZE
+  color #0
+  frect SQUARE_SIZE, SQUARE_SIZE
 
-  pxa #SQUARE_SIZE
+  pxa SQUARE_SIZE
 
-  inc #RECT_LOOP_INDEX_ADDR
+  inc RECT_LOOP_INDEX_ADDR
 
-  cmp RECT_LOOP_INDEX_ADDR, #RECT_DRAW_LOOP_END
-  jne #rects
+  cmp #RECT_LOOP_INDEX_ADDR, RECT_DRAW_LOOP_END
+  jne rects
 
-mov #4, #SQUARE_SIZE
-add #4, #2
-pxl #0, 4
+mov 4, SQUARE_SIZE
+add 4, 2
+pxl 0, #4
 
-charw #'4
-charw #' 
-charw #'C
-charw #'O
-charw #'L
-charw #'O
-charw #'R
-charw #' 
-charw #'P
-charw #'A
-charw #'L
-charw #'E
-charw #'T
-charw #'T
-charw #'E
+charw '4
+charw ' 
+charw 'C
+charw 'O
+charw 'L
+charw 'O
+charw 'R
+charw ' 
+charw 'P
+charw 'A
+charw 'L
+charw 'E
+charw 'T
+charw 'T
+charw 'E
 
-pxe #2
-pya #10
+pxe 2
+pya 10
 
-color #1
-frect #60 #16
-color #0
-rect #60, #16
-pxa #2
-pya #2
-color #3
-frect #56 #12
-color #2
-rect #56, #12
+color 1
+frect 60 16
+color 0
+rect 60, 16
+pxa 2
+pya 2
+color 3
+frect 56 12
+color 2
+rect 56, 12
