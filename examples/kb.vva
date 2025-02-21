@@ -1,17 +1,20 @@
 .version 0
 .graphics 2
-.width 128
-.height 64
+.width 256
+.height 128
 .bits 16
 
-def DISPLAY_WIDTH 128
-def DISPLAY_HEIGHT 64
+def DISPLAY_WIDTH 256
+def DISPLAY_HEIGHT 128
 
-def TEXT_CUTOFF 56
+def TEXT_STACK 0
+
+def TEXT_CUTOFF 120
 
 def KEYBOARD_ADDRESS 0
 def PX_ADDRESS 1
 def PY_ADDRESS 2
+def LAST_CHAR_ADDRESS 3
 
 color 1
 
@@ -26,6 +29,7 @@ label printchr
   call get_pixel_vals
 
   cmp #KEYBOARD_ADDRESS, 8
+  clne add_to_stack
   cleq backspace
 
   cmp #PX_ADDRESS, DISPLAY_WIDTH
@@ -34,10 +38,18 @@ label printchr
   rkb
   ret
 
+label add_to_stack
+  push #KEYBOARD_ADDRESS
+  ret
+
 label backspace
-  pxs 10
+  pop 3 
+  glyphw #3, 3
+
+  pxs #3
+  pxs 1
   color 0
-  frect 8, 8
+  frect 5, 5
   color 1
   ret
 

@@ -67,15 +67,17 @@
 | frect A,B             | fill rect from current pixel position with width A, height B                                                                                                   | 2         |                  | 34     |
 | char A                | draw glyph assigned to hex code A at current pixel position                                                                                                    | 1         |                  | 35     |
 | charw A               | draw glyph assigned to hex code A at current pixel position, and update pixel position to reflect glyph width (including y position if at the edge of display) | 1         |                  | 36     |
-| mouse A,B             | place mouse x and y positions into addresses A and B                                                                                                           | 2         | WA WB            | 37     |
-| click A               | get click status and place into address A                                                                                                                      | 1         | WA               | 38     |
-| kb A                  | place current keyboard keycode into address A                                                                                                                  | 1         | WA               | 39     |
-| rkb                   | reset keyboard keycode                                                                                                                                         | 1         |                  | 3A     |
-| beep A                | play square wave at frequency A / 100 kHz                                                                                                                      | 1         |                  | 3B     |
-| wait A                | pause execution for A milliseconds                                                                                                                             | 1         |                  | 3C     |
-| rnd A,B               | generate random number from 0 to B and place into A                                                                                                            | 2         | WA               | 3D     |
-| log A                 | log character A to console                                                                                                                                     | 1         |                  | 3E     |
-| halt                  | halt execution                                                                                                                                                 | 0         |                  | 3F     |
+| glyphw A,B            | get glyph A's width and place into address B                                                                                                                   | 2         | WB               | 37     |
+| glyphh A,B            | get glyph B's height and place into address B                                                                                                                  | 2         | WB               | 38     |
+| mouse A,B             | place mouse x and y positions into addresses A and B                                                                                                           | 2         | WA WB            | 39     |
+| click A               | get click status and place into address A                                                                                                                      | 1         | WA               | 3A     |
+| kb A                  | place current keyboard keycode into address A                                                                                                                  | 1         | WA               | 3B     |
+| rkb                   | reset keyboard keycode                                                                                                                                         | 1         |                  | 3C     |
+| beep A                | play square wave at frequency A / 100 kHz                                                                                                                      | 1         |                  | 3D     |
+| wait A                | pause execution for A milliseconds                                                                                                                             | 1         |                  | 3E     |
+| rnd A,B               | generate random number from 0 to B and place into A                                                                                                            | 2         | WA               | 3F     |
+| log A                 | log character A to console                                                                                                                                     | 1         |                  | 40     |
+| halt                  | halt execution                                                                                                                                                 | 0         |                  | 41     |
 ## registers
 
 `vonave` has 16 registers, `a` (internally known as `00`) through p (internally known as `0F`.
@@ -102,3 +104,7 @@
 ## banks
 
 `vonave` has two banks: one for general RAM, and another for file I/O.
+
+## stacks
+
+`vonave` has 16 stacks, each of which freely readable and writable.

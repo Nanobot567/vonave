@@ -3,14 +3,14 @@
 # vonave emulator
 
 import binascii
-from sys import stdout
+from sys import intern, stdout
 import pygame
 import random
 import argparse
 
 from helpers import HEADER_LENGTH, INSTRUCTION_HEADER_LENGTH, INSTRUCTIONS, PALETTE_FOURBIT, PALETTE_ONEBIT, PALETTE_TWOBIT, Argument, padhexa
 
-SCALE = 12
+SCALE = 8
 
 INSTRUCTION_KEYS = []
 
@@ -95,8 +95,8 @@ def emulate(data):
         return inst, args, registers, dataAtAddress, ptr
 
     asmver = data[4]
-    displaywidth = int.from_bytes(data[5:6])
-    displayheight = int.from_bytes(data[7:8])
+    displaywidth = int.from_bytes(data[4:6])
+    displayheight = int.from_bytes(data[6:8])
     gfxmode = data[8]
     bits = data[9]
 
@@ -111,7 +111,7 @@ def emulate(data):
         pygame.display.set_icon(pygame.surface.Surface((0, 0)))
         pygame.freetype.init()
 
-        defaultfont = pygame.freetype.Font("pzim3x5.ttf", 10)
+        defaultfont = pygame.freetype.Font("default.ttf", 5)
 
         screen = pygame.display.set_mode((displaywidth * SCALE, displayheight * SCALE))
         win = pygame.Surface((displaywidth, displayheight))
@@ -132,7 +132,8 @@ def emulate(data):
 
     pixelpos = [0, 0]
     cmp = [0, 0]
-    stack = []
+    stacks = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []] # TODO: create Stack class which prevents writing more than (num) values
+    currentStack = 0
     callstack = []
  
     keydown = 0 # TODO: cache keydown when it is pressed, then if kb is called remove it..? something like that, rkb is dumb lol
@@ -247,11 +248,13 @@ def emulate(data):
                         except IndexError:
                             pass
                     case "push":
-                        stack.append(intarg0)
+                        stacks[currentStack].append(intarg0)
                     case "pop":
-                        ram[intarg0] = stack.pop()
+                        ram[intarg0] = stacks[currentStack].pop()
                     case "popa":
-                        stack = []
+                        stacks[currentStack] = []
+                    case "stack":
+                        currentStack = intarg0
                     case "and":
                         pass
                     case "or":
@@ -306,17 +309,36 @@ def emulate(data):
                     case "frect":
                         pygame.draw.rect(win, color, (pixelpos[0], pixelpos[1], intarg0, intarg1))
                     case "char":
-                        # pass
-                        text_surface, rect = defaultfont.render(chr(intarg0), color)
-                        win.blit(text_surface, (pixelpos[0], pixelpos[1]))
+                        try:
+                            text_surface, rect = defaultfont.render(chr(intarg0), color)
+                            win.blit(text_surface, (pixelpos[0], pixelpos[1]))
+                        except ValueError:
+                            pass
                     case "charw":
-                        text_surface, rect = defaultfont.render(chr(intarg0), color)
-                        win.blit(text_surface, (pixelpos[0], pixelpos[1]))
+                        try:
+                            text_surface, rect = defaultfont.render(chr(intarg0), color)
+                            win.blit(text_surface, (pixelpos[0], pixelpos[1]))
 
-                        if chr(intarg0) == " ":
-                            pixelpos[0] += 2
+                            if chr(intarg0) == " ":
+                                pixelpos[0] += 2
+                            else:
+                                pixelpos[0] += text_surface.get_width() + 1
+                        except ValueError:
+                            pass
+                    case "glyphw":
+                        metrics = defaultfont.get_metrics(chr(intarg0))
+
+                        if metrics[0]:
+                            horiz_advance_width = metrics[0][4]
+                            if chr(intarg0) == " ":
+                                horiz_advance_width -= 1
+                            ram[intarg1] = int(horiz_advance_width)
                         else:
-                            pixelpos[0] += text_surface.get_width() + 1
+                            ram[intarg1] = 0
+                    case "glyphh": # possibly change name, as glyph isn't even taken into account lol
+                        fh = defaultfont.height
+
+                        ram[intarg1] = fh
                     case "mouse":
                         mp = pygame.mouse.get_pos()
                         ram[intarg0] = int(mp[0] / SCALE)
@@ -349,6 +371,17 @@ def emulate(data):
                     case "halt":
                         print("\n[VNV] CPU halted.")
                         running = False
+
+                if pixelpos[0] > displaywidth:
+                    pixelpos[0] = pixelpos[0] - displaywidth
+                elif pixelpos[0] < 0:
+                    pixelpos[0] = displaywidth - abs(pixelpos[0])
+
+                if pixelpos[1] > displaywidth:
+                    pixelpos[1] = pixelpos[1] - displaywidth
+                elif pixelpos[1] < 0:
+                    pixelpos[1] = displaywidth - abs(pixelpos[1])
+
             except UnboundLocalError:
                 pass
             except AttributeError:
