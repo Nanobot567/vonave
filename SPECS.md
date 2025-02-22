@@ -1,4 +1,4 @@
 - variable-bit
 - total memory maximum determined at compile time (based on bit width)
-- general stack
+- 16 general stacks
 - 16 registers

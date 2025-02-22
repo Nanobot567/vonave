@@ -31,13 +31,18 @@ class VonaveAssemblerException(Exception):
 def assemble(asm):
     graphicsMode = "00"
     version = "00"
-    displaywidth = "64"
-    displayheight = "64"
+    displaywidth = "0040"
+    displayheight = "0040"
     bits = "10" # 16 TODO: make this so it's actually accurate (bc for some reason 4-bit 4color.vva works..)
 
     labels = {}
     defs = {}
     datas = {}
+    interrupts = {
+        "kb": 0,
+        "mouse": 0,
+        "click": 0
+    }
 
     header = [strToHexStr("VVX")]
     byt = []
@@ -88,6 +93,9 @@ def assemble(asm):
 
         elif line.startswith(".data"):
             datas[line.split(" ")[1]] = line.split(" ")[2]
+
+        elif line.startswith("interrupt"):
+            interrupts[line.split(" ")[1]] = byteIndex
             
         elif line.startswith("label"):
             name = line.split(" ")[1]
@@ -227,6 +235,9 @@ def assemble(asm):
 
     for k, v in datas.items():
         byt.append(datasHex[k])
+
+    for k in helpers.INTERRUPTS:
+        header.append(helpers.padhexa(str(interrupts[k]), int(int(bits, 16) / 4)))
 
     return "".join(header) + "".join(byt)
 

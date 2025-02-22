@@ -78,6 +78,7 @@ INSTRUCTIONS = {
     "charw": Instruction("charw", [Argument.ANY]),
     "glyphw": Instruction("glyphw", [Argument.ANY, Argument.WRITABLE]),
     "glyphh": Instruction("glyphh", [Argument.ANY, Argument.WRITABLE]),
+    "idata": Instruction("idata", [Argument.ANY, Argument.WRITABLE]),
     "mouse": Instruction("mouse", [Argument.WRITABLE, Argument.WRITABLE]),
     "click": Instruction("click", [Argument.WRITABLE]),
     "kb": Instruction("kb", [Argument.WRITABLE]),
@@ -115,6 +116,7 @@ READ_ONLY_REGISTERS = [
 ]
 
 HEADER_LENGTH = 10
+BIT_DEPENDENT_ARGS_COUNT = 3
 INSTRUCTION_HEADER_LENGTH = 3
 
 PALETTE_ONEBIT = [(0, 0, 0), (255, 255, 255)]
@@ -137,3 +139,9 @@ PALETTE_FOURBIT = [(0, 0, 0),
                    (255, 255, 255)]
 PALETTE_EIGHTBIT = []
 PALETTE_SIXTEENBIT = []
+
+INTERRUPTS = [
+    "kb",
+    "mouse",
+    "click"
+]

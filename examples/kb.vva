@@ -16,21 +16,57 @@ def PX_ADDRESS 1
 def PY_ADDRESS 2
 def LAST_CHAR_ADDRESS 3
 
+def CAN_ADD_TO_STACK_FLAG_ADDRESS 4
+
+def TEXT_LEN_ADDRESS 5
+
+def TEMP_X 6
+def TEMP_Y 7
+
+def ALLOW_TYPING 8
+
+color 1
+
+mov ALLOW_TYPING, 0
+
+charw 'T
+charw 'X
+charw 'E
+charw 'D
+
+wait 1000
+
+mov ALLOW_TYPING, 1
+
+pxl 0, 0
+
+color 0
+wipe
 color 1
 
 label main
-  kb KEYBOARD_ADDRESS
-  cmp #KEYBOARD_ADDRESS, 0
-  clne printchr
   jmp main
 
-label printchr
+interrupt kb
+  cmp #ALLOW_TYPING, 1
+  cleq add_char
+  ret
+
+label add_char
+  mov CAN_ADD_TO_STACK_FLAG_ADDRESS, 1
+
+  idata 0, KEYBOARD_ADDRESS
   charw #KEYBOARD_ADDRESS
   call get_pixel_vals
 
-  cmp #KEYBOARD_ADDRESS, 8
-  clne add_to_stack
+  cmp #KEYBOARD_ADDRESS, 8 ; backspace pressed?
   cleq backspace
+
+  cmp #KEYBOARD_ADDRESS, 13 ; return pressed?
+  cleq newline
+
+  cmp #CAN_ADD_TO_STACK_FLAG_ADDRESS, 1
+  cleq add_to_stack
 
   cmp #PX_ADDRESS, DISPLAY_WIDTH
   clme newline
@@ -40,9 +76,13 @@ label printchr
 
 label add_to_stack
   push #KEYBOARD_ADDRESS
+  inc TEXT_LEN_ADDRESS
   ret
 
 label backspace
+  mov CAN_ADD_TO_STACK_FLAG_ADDRESS, 0
+  dec TEXT_LEN_ADDRESS
+
   pop 3 
   glyphw #3, 3
 
@@ -54,6 +94,8 @@ label backspace
   ret
 
 label newline
+  mov CAN_ADD_TO_STACK_FLAG_ADDRESS, 0 
+
   pxe 0
   pya 8
 

@@ -8,7 +8,7 @@ import pygame
 import random
 import argparse
 
-from helpers import HEADER_LENGTH, INSTRUCTION_HEADER_LENGTH, INSTRUCTIONS, PALETTE_FOURBIT, PALETTE_ONEBIT, PALETTE_TWOBIT, Argument, padhexa
+from helpers import BIT_DEPENDENT_ARGS_COUNT, HEADER_LENGTH, INSTRUCTION_HEADER_LENGTH, INSTRUCTIONS, INTERRUPTS, PALETTE_FOURBIT, PALETTE_ONEBIT, PALETTE_TWOBIT, Argument, padhexa
 
 SCALE = 8
 
@@ -99,6 +99,13 @@ def emulate(data):
     displayheight = int.from_bytes(data[6:8])
     gfxmode = data[8]
     bits = data[9]
+    
+    interrupts = {}
+
+    for i in range(BIT_DEPENDENT_ARGS_COUNT):
+        ptr = (i * (int(bits / 8))) + HEADER_LENGTH
+
+        interrupts[INTERRUPTS[i]] = data[ptr:ptr+(int(bits / 8))]
 
     palette = []
 
@@ -109,11 +116,12 @@ def emulate(data):
         pygame.init()
         pygame.display.set_caption("vonave")
         pygame.display.set_icon(pygame.surface.Surface((0, 0)))
+        pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
         pygame.freetype.init()
 
         defaultfont = pygame.freetype.Font("default.ttf", 5)
 
-        screen = pygame.display.set_mode((displaywidth * SCALE, displayheight * SCALE))
+        screen = pygame.display.set_mode((displaywidth * SCALE, displayheight * SCALE), pygame.DOUBLEBUF)
         win = pygame.Surface((displaywidth, displayheight))
 
         if gfxmode == 1:
@@ -128,13 +136,17 @@ def emulate(data):
 
     running = True
 
-    ptr = HEADER_LENGTH
+    ACTUAL_HEADER_LENGTH = HEADER_LENGTH + (BIT_DEPENDENT_ARGS_COUNT * int(bits / 8))
+
+    ptr = ACTUAL_HEADER_LENGTH
 
     pixelpos = [0, 0]
     cmp = [0, 0]
     stacks = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []] # TODO: create Stack class which prevents writing more than (num) values
     currentStack = 0
     callstack = []
+
+    interruptStack = []
  
     keydown = 0 # TODO: cache keydown when it is pressed, then if kb is called remove it..? something like that, rkb is dumb lol
     # alternatively you could add interrupts!
@@ -151,9 +163,16 @@ def emulate(data):
                 elif event.type == pygame.KEYDOWN:
                     keydown = event.key
 
+                    if interrupts["kb"]:
+                        interruptStack.append("kb")
+                        callstack.append(ptr)
+                        ptr = int.from_bytes(interrupts["kb"]) + 2
+
         instruction, args, rgrs, fromROM, ptr = parseBlock(data, ptr)
 
         if instruction:
+            drew = False
+
             iname = instruction.name
 
             intarg0, intarg1 = 0, 0
@@ -196,55 +215,56 @@ def emulate(data):
                     case "cmp":
                         cmp = [intarg0, intarg1]
                     case "jmp": # TODO: possibly compress in some way
-                        ptr = intarg0 + HEADER_LENGTH
+                        ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "jeq":
                         if cmp[0] == cmp[1]:
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "jne":
                         if cmp[0] != cmp[1]:
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "jmt":
                         if cmp[0] > cmp[1]:
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "jme":
                         if cmp[0] >= cmp[1]:
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "jlt":
                         if cmp[0] < cmp[1]:
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "jle":
                         if cmp[0] <= cmp[1]:
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "call":
                         callstack.append(ptr)
-                        ptr = intarg0 + HEADER_LENGTH
+                        ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "cleq":
                         if cmp[0] == cmp[1]:
                             callstack.append(ptr)
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "clne":
                         if cmp[0] != cmp[1]:
                             callstack.append(ptr)
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "clmt":
                         if cmp[0] > cmp[1]:
                             callstack.append(ptr)
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "clme":
                         if cmp[0] >= cmp[1]:
                             callstack.append(ptr)
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "cllt":
                         if cmp[0] < cmp[1]:
                             callstack.append(ptr)
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "clle":
                         if cmp[0] <= cmp[1]:
                             callstack.append(ptr)
-                            ptr = intarg0 + HEADER_LENGTH
+                            ptr = intarg0 + ACTUAL_HEADER_LENGTH
                     case "ret":
                         try:
                             ptr = callstack.pop()
+                            interruptStack.pop()
                         except IndexError:
                             pass
                     case "push":
@@ -269,6 +289,7 @@ def emulate(data):
                         pass
                     case "wipe":
                         win.fill(palette[0], (0, 0, displaywidth, displayheight))
+                        drew = True
                     case "palette":
                         palette[intarg0] = tuple(arg1)
                         color = palette[colorindex]
@@ -302,18 +323,23 @@ def emulate(data):
                         pixelpos[1] -= intarg0
                     case "point":
                         win.set_at((pixelpos[0], pixelpos[1]), color)
+                        drew = True
                     case "line":
                         pygame.draw.line(win, color, (pixelpos[0], pixelpos[1]), (intarg0, intarg1))
+                        drew = True
                     case "rect":
                         pygame.draw.rect(win, color, (pixelpos[0], pixelpos[1], intarg0, intarg1), width=1)
+                        drew = True
                     case "frect":
                         pygame.draw.rect(win, color, (pixelpos[0], pixelpos[1], intarg0, intarg1))
+                        drew = True
                     case "char":
                         try:
                             text_surface, rect = defaultfont.render(chr(intarg0), color)
                             win.blit(text_surface, (pixelpos[0], pixelpos[1]))
                         except ValueError:
                             pass
+                        drew = True
                     case "charw":
                         try:
                             text_surface, rect = defaultfont.render(chr(intarg0), color)
@@ -325,6 +351,7 @@ def emulate(data):
                                 pixelpos[0] += text_surface.get_width() + 1
                         except ValueError:
                             pass
+                        drew = True
                     case "glyphw":
                         metrics = defaultfont.get_metrics(chr(intarg0))
 
@@ -339,6 +366,13 @@ def emulate(data):
                         fh = defaultfont.height
 
                         ram[intarg1] = fh
+                    case "idata":
+                        try:
+                            if interruptStack[-1] == "kb":
+                                if intarg0 == 0:
+                                    ram[intarg1] = keydown
+                        except IndexError:
+                            pass
                     case "mouse":
                         mp = pygame.mouse.get_pos()
                         ram[intarg0] = int(mp[0] / SCALE)
@@ -391,7 +425,8 @@ def emulate(data):
         if gfxmode > 0:
             scaledwin = pygame.transform.scale(win, screen.get_size())
             screen.blit(scaledwin, (0, 0))
-            pygame.display.flip()
+            if drew:
+                pygame.display.flip()
 
     if gfxmode > 0:
         pygame.quit()
