@@ -1,0 +1,52 @@
+.graphics 2
+
+label main
+  nop
+  jmp main
+
+interrupt kb
+  log 'K
+  log ' 
+
+  idata 0, 0
+
+  log #0
+  log 0xA
+
+  ret
+
+interrupt mouse
+  idata 0, 0
+
+  add 0, 27
+
+  log 'M
+  log ' 
+  log #0
+
+  idata 0, 1
+
+  add 0, 27
+
+  log ' 
+  log #0
+  log 0xA
+  ret
+
+interrupt click
+  idata 0, 0
+
+  log 'C
+  log ' 
+  
+  add 0, 48
+  log #0
+
+  idata 0, 1
+
+  add 0, 48
+  log #0
+
+  log 0xA
+
+  ret

@@ -35,14 +35,7 @@ charw 'O
 charw 'L
 charw 'O
 charw 'R
-charw ' 
-charw 'P
-charw 'A
-charw 'L
-charw 'E
-charw 'T
-charw 'T
-charw 'E
+charw 'S
 
 pxe 2
 pya 10

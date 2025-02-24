@@ -88,8 +88,10 @@ label loop2
   inc 0
   char #0
   log #0
-  cmp #0, 256
+  cmp #0, 130
   jne loop2
+
+wipe
 
 mov 1, 0
 mov 2, 0
@@ -143,14 +145,6 @@ charw '
 charw 'K
 charw 'E
 charw 'Y
-charw ' 
-charw 'T
-charw 'O
-charw ' 
-charw 'E
-charw 'X
-charw 'I
-charw 'T
 
 label wait
   kb 0

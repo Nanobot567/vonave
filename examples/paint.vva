@@ -16,16 +16,8 @@ def DISPLAY_HEIGHT 64
 def COLOR_PIXEL_X 127
 def COLOR_PIXEL_Y 63
 
-label main
-  mouse MOUSE_X_ADDR, MOUSE_Y_ADDR
-  pxl #MOUSE_X_ADDR, #MOUSE_Y_ADDR
-  
-  click MOUSE_CLICK_ADDR
-
-  cmp #MOUSE_CLICK_ADDR, 1
-  cleq drawpoint
-
-  kb KEYBOARD_ADDR
+interrupt kb
+  idata KEYBOARD_ADDR, 0
 
   cmp #KEYBOARD_ADDR, '1 ; pressed 1?
   cleq switch_color_1
@@ -35,9 +27,21 @@ label main
   cleq switch_color_3
   cmp #KEYBOARD_ADDR, '4 ; pressed 4?
   cleq switch_color_4
-
+  
   cmp #KEYBOARD_ADDR, 'c ; pressed c?
   cleq clear_screen
+  ret
+
+interrupt mouse
+  mouse MOUSE_X_ADDR, MOUSE_Y_ADDR
+  ret
+
+label main 
+  pxl #MOUSE_X_ADDR, #MOUSE_Y_ADDR
+  click MOUSE_CLICK_ADDR
+
+  cmp #MOUSE_CLICK_ADDR, 1
+  cleq drawpoint
 
   pxl COLOR_PIXEL_X, COLOR_PIXEL_Y
   point

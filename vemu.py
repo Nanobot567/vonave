@@ -107,6 +107,9 @@ def emulate(data):
 
         interrupts[INTERRUPTS[i]] = data[ptr:ptr+(int(bits / 8))]
 
+        if interrupts[INTERRUPTS[i]] == b"\x00\x00":
+            interrupts[INTERRUPTS[i]] = None
+
     palette = []
 
     screen = None
@@ -116,7 +119,7 @@ def emulate(data):
         pygame.init()
         pygame.display.set_caption("vonave")
         pygame.display.set_icon(pygame.surface.Surface((0, 0)))
-        pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
+        pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION])
         pygame.freetype.init()
 
         defaultfont = pygame.freetype.Font("default.ttf", 5)
@@ -148,11 +151,9 @@ def emulate(data):
 
     interruptStack = []
  
-    keydown = 0 # TODO: cache keydown when it is pressed, then if kb is called remove it..? something like that, rkb is dumb lol
-    # alternatively you could add interrupts!
-    # interrupt kb
-    #   [code]
+    keydown = 0
     mousepos = [0, 0]
+    mousebuttons = [False, False, False]
 
     while running:
         if gfxmode > 0:
@@ -167,6 +168,29 @@ def emulate(data):
                         interruptStack.append("kb")
                         callstack.append(ptr)
                         ptr = int.from_bytes(interrupts["kb"]) + 2
+
+                elif event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.MOUSEBUTTONUP:
+                    mb = pygame.mouse.get_pressed()
+                    mousebuttons = [0, 0, 0]
+
+                    for i, v in enumerate(mb):
+                        if v:
+                            mousebuttons[i] = 1
+
+                    if interrupts["click"]:
+                        interruptStack.append("click")
+                        callstack.append(ptr)
+                        ptr = int.from_bytes(interrupts["click"]) + 6
+
+                elif event.type == pygame.MOUSEMOTION:
+                    mp = pygame.mouse.get_pos()
+                    mousepos[0] = int(mp[0] / SCALE)
+                    mousepos[1] = int(mp[1] / SCALE)
+
+                    if interrupts["mouse"]:
+                        interruptStack.append("mouse")
+                        callstack.append(ptr)
+                        ptr = int.from_bytes(interrupts["mouse"]) + 6 # don't know why these arbitrary numbers work but-
 
         instruction, args, rgrs, fromROM, ptr = parseBlock(data, ptr)
 
@@ -369,16 +393,27 @@ def emulate(data):
                     case "idata":
                         try:
                             if interruptStack[-1] == "kb":
-                                if intarg0 == 0:
-                                    ram[intarg1] = keydown
+                                if intarg1 == 0:
+                                    ram[intarg0] = keydown
+                            elif interruptStack[-1] == "mouse":
+                                if intarg1 == 0:
+                                    ram[intarg0] = mousepos[0]
+                                elif intarg1 == 1:
+                                    ram[intarg0] = mousepos[1]
+                            elif interruptStack[-1] == "click":
+                                if intarg1 == 0:
+                                    ram[intarg0] = mousebuttons[0] # left
+                                elif intarg1 == 1:
+                                    ram[intarg0] = mousebuttons[2] # right
+                                elif intarg1 == 2:
+                                    ram[intarg0] = mousebuttons[1] # middle
                         except IndexError:
                             pass
                     case "mouse":
-                        mp = pygame.mouse.get_pos()
-                        ram[intarg0] = int(mp[0] / SCALE)
-                        ram[intarg1] = int(mp[1] / SCALE)
+                        ram[intarg0] = mousepos[0]
+                        ram[intarg1] = mousepos[1]
                     case "click":
-                        cl = pygame.mouse.get_pressed()
+                        cl = mousebuttons
 
                         ram[intarg0] = 0
 
