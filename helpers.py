@@ -87,6 +87,7 @@ INSTRUCTIONS = {
     "wait": Instruction("wait", [Argument.ANY]),
     "rnd": Instruction("rnd", [Argument.WRITABLE, Argument.ANY]),
     "log": Instruction("log", [Argument.ANY]),
+    "ilog": Instruction("ilog", [Argument.ANY]),
     "halt": Instruction("halt"),
 }
 

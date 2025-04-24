@@ -2,14 +2,17 @@
 
 `vonave`'s binary format (.vvx).
 
-| offset    | description                |
-| --------- | -------------------------- |
-| `00`-`02` | vonave magic (`VVX`)       |
-| `03`      | format version number      |
-| `04`-`05` | display width (in pixels)  |
-| `06`-`07` | display height (in pixels) |
-| `08`      | graphics mode              |
-| `09`      | bit width                  |
+| offset           | description                      |
+| ---------------- | -------------------------------- |
+| `00`-`02`        | vonave magic (`VVX`)             |
+| `03`             | format version number            |
+| `04`-`05`        | display width (in pixels)        |
+| `06`-`07`        | display height (in pixels)       |
+| `08`             | graphics mode                    |
+| `09`             | bit width                        |
+| `0A-`0A+bitwidth | keyboard interrupt address       |
+|                  | mouse movement interrupt address |
+|                  | mouse click interrupt address    |
 
 for each instruction, there is...
 

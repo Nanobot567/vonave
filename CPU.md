@@ -69,7 +69,7 @@
 | charw A               | draw glyph assigned to hex code A at current pixel position, and update pixel position to reflect glyph width (including y position if at the edge of display) | 1         |                  | 36     |
 | glyphw A,B            | get glyph A's width and place into address B                                                                                                                   | 2         | WB               | 37     |
 | glyphh A,B            | get glyph B's height and place into address B                                                                                                                  | 2         | WB               | 38     |
-| idata A,B             | get last interrupt data at index A and place into address B                                                                                                    | 2         | WB               | 39     |
+| idata A,B             | get last interrupt data at index B and place into address A                                                                                                    | 2         | WA               | 39     |
 | mouse A,B             | place mouse x and y positions into addresses A and B                                                                                                           | 2         | WA WB            | 3A     |
 | click A               | get click status and place into address A                                                                                                                      | 1         | WA               | 3B     |
 | kb A                  | place current keyboard keycode into address A                                                                                                                  | 1         | WA               | 3C     |
@@ -78,7 +78,8 @@
 | wait A                | pause execution for A milliseconds                                                                                                                             | 1         |                  | 3F     |
 | rnd A,B               | generate random number from 0 to B and place into A                                                                                                            | 2         | WA               | 40     |
 | log A                 | log character A to console                                                                                                                                     | 1         |                  | 41     |
-| halt                  | halt execution                                                                                                                                                 | 0         |                  | 42     |
+| ilog A                | log integer representation of character A to console                                                                                                           | 1         |                  | 42     |
+| halt                  | halt execution                                                                                                                                                 | 0         |                  | 43     |
 ## registers
 
 `vonave` has 16 registers, `a` (internally known as `00`) through p (internally known as `0F`.

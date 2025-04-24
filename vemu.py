@@ -300,17 +300,17 @@ def emulate(data):
                     case "stack":
                         currentStack = intarg0
                     case "and":
-                        pass
+                        ram[intarg0] = ram[intarg0] & ram[intarg1]
                     case "or":
-                        pass
+                        ram[intarg0] = ram[intarg0] | ram[intarg1]
                     case "xor":
-                        pass
+                        ram[intarg0] = ram[intarg0] ^ ram[intarg1]
                     case "not":
-                        pass
+                        ram[intarg0] = ~ram[intarg0]
                     case "shr":
-                        pass
+                        ram[intarg0] = ram[intarg0] >> 1
                     case "shl":
-                        pass
+                        ram[intarg0] = ram[intarg0] << 1
                     case "wipe":
                         win.fill(palette[0], (0, 0, displaywidth, displayheight))
                         drew = True
@@ -437,6 +437,9 @@ def emulate(data):
                             stdout.flush()
                         except UnicodeDecodeError:
                             pass
+                    case "ilog":
+                        stdout.write(str(intarg0))
+                        stdout.flush()
                     case "halt":
                         print("\n[VNV] CPU halted.")
                         running = False

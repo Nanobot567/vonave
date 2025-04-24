@@ -11,6 +11,8 @@ interrupt kb
   idata 0, 0
 
   log #0
+  log ' 
+  ilog #0
   log 0xA
 
   ret
@@ -18,18 +20,14 @@ interrupt kb
 interrupt mouse
   idata 0, 0
 
-  add 0, 27
-
   log 'M
   log ' 
-  log #0
+  ilog #0
 
   idata 0, 1
 
-  add 0, 27
-
   log ' 
-  log #0
+  ilog #0
   log 0xA
   ret
 
